@@ -23,8 +23,8 @@ This program can have AI play 100.000 full games out in 4.7 seconds
 
 
 ## Todo
-Add networking to play against other computers including AI bots
-Add gui for playing game
+* Add networking to play against other computers including AI bots
+* Add gui for playing game
 
 ## Project setup
 ```
