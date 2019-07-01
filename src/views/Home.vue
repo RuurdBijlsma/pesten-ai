@@ -1,6 +1,6 @@
 <template>
     <div class="home">
-        <md-content class="content">
+        <md-content class="content" :key="updateKey">
             <h1>Pesten!</h1>
             <!--<p v-for="gameLine in gamePlay">{{gameLine}}</p>-->
             <div class="deck">
@@ -50,6 +50,7 @@
                 possibleMoves: [],
                 pesten,
                 gameMoves: [],
+                updateKey: 0
             }
         },
         async mounted() {
@@ -61,6 +62,9 @@
                 this.computerPlay();
 
             this.possibleMoves = pesten.possibleMoves(pesten.state);
+
+            this.checkWin();
+            this.forceUpdate();
         },
         methods: {
             playerMove(move) {
@@ -70,8 +74,12 @@
 
                     if (pesten.state.turn === this.computerTurn)
                         this.computerPlay();
-                    else
+
+                    if (pesten.state.turn === this.playerTurn)
                         this.possibleMoves = pesten.possibleMoves(pesten.state);
+
+                    this.forceUpdate();
+                    this.checkWin();
                 }
             },
             computerPlay(log = true) {
@@ -89,6 +97,9 @@
                 let winner = pesten.gameWinner(pesten.state);
                 if (winner !== false)
                     alert("Player " + winner + " is winner!");
+            },
+            forceUpdate() {
+                this.updateKey++;
             }
         }
     }
