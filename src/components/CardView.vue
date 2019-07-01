@@ -1,6 +1,6 @@
 <template>
     <div class="card-view">
-        <p>{{symbol}} {{card.type}}</p>
+        <p><span :style="`color: ${symbol.color}`">{{symbol.string}}</span> {{card.type}}</p>
     </div>
 </template>
 
@@ -12,17 +12,17 @@
         props: {
             card: Card,
         },
-        computed:{
-            symbol(){
-                switch(this.card.color){
+        computed: {
+            symbol() {
+                switch (this.card.color) {
                     case 'spades':
-                        return '♠';
+                        return {color: 'black', string: '♠'};
                     case 'clubs':
-                        return '♣';
+                        return {color: 'black', string: '♣'};
                     case 'hearts':
-                        return '♥';
+                        return {color: 'red', string: '♥'};
                     case 'diamonds':
-                        return '♦';
+                        return {color: 'red', string: '♦'};
                 }
                 return 'X';
             }

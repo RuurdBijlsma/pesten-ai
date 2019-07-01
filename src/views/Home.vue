@@ -7,16 +7,28 @@
                 <h2>Deck</h2>
                 <p>Top card:</p>
                 <card-view :card="pesten.state.activeDeck[pesten.state.activeDeck.length - 1]"></card-view>
+                <p>Opponent deck size: {{pesten.state.players[computerTurn].deck.length}}</p>
             </div>
             <div class="my-cards">
                 <h2>My Cards</h2>
-                <card-view v-for="card in pesten.state.players[playerTurn].deck" :card="card"></card-view>
+                <div v-for="card in pesten.state.players[playerTurn].deck" class="move">
+                    <card-view :card="card"></card-view>
+                    <md-button
+                            v-if="possibleMoves
+                                .filter(m => !!m.card)
+                                .find(m => m.card.type === card.type && m.card.color === card.color)"
+                            @click="playerMove(possibleMoves
+                                .filter(m => !!m.card)
+                                .find(m => m.card.type === card.type && m.card.color === card.color))"
+                            class="md-dense md-primary">Do move
+                    </md-button>
+                </div>
             </div>
-            <div class="possible-moves" v-if="pesten.state.turn === playerTurn">
+            <div class="possible-moves" v-if="pesten.state.turn === playerTurn && possibleMoves.filter(m => !m.card).length > 0">
                 <h2>Possible Moves</h2>
-                <div v-for="move in possibleMoves" class="move">
+                <div v-for="move in possibleMoves.filter(m => !m.card)" class="move">
                     <move-view :move="move"></move-view>
-                    <md-button @click="playerMove(move)" class="md-primary">Do move</md-button>
+                    <md-button @click="playerMove(move)" class="md-dense md-primary">Do move</md-button>
                 </div>
             </div>
         </md-content>
@@ -110,6 +122,11 @@
         display: flex;
         flex-direction: row;
         justify-content: space-around;
+    }
+
+    .move {
+        display: flex;
+        justify-content: left;
     }
 
     .md-content {

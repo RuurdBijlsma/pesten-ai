@@ -115,7 +115,6 @@ class Pesten {
     }
 
     playCard(state, move) {
-        console.log(JSON.stringify({state, move}));
         let playerCards = state.players[state.turn].deck;
         let playedCard = playerCards[move.value];
         let currentPlayer = state.players[state.turn];
