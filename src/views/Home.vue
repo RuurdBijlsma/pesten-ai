@@ -2,48 +2,106 @@
     <div class="home">
         <md-content class="content">
             <h1>Pesten!</h1>
-            <p v-for="gameLine in gamePlay">{{gameLine}}</p>
+            <!--<p v-for="gameLine in gamePlay">{{gameLine}}</p>-->
+            <div class="deck">
+                <h2>Deck</h2>
+                <p>Top card:</p>
+                <card-view :card="pesten.state.activeDeck[pesten.state.activeDeck.length - 1]"></card-view>
+            </div>
+            <div class="my-cards">
+                <h2>My Cards</h2>
+                <card-view v-for="card in pesten.state.players[playerTurn].deck" :card="card"></card-view>
+            </div>
+            <div class="possible-moves" v-if="pesten.state.turn === playerTurn">
+                <h2>Possible Moves</h2>
+                <div v-for="move in possibleMoves" class="move">
+                    <move-view :move="move"></move-view>
+                    <md-button @click="playerMove(move)" class="md-primary">Do move</md-button>
+                </div>
+            </div>
+        </md-content>
+
+        <md-content>
+            <h2>Moves log</h2>
+            <p>Computer is player {{computerTurn}}, human is player {{playerTurn}}</p>
+            <div v-for="{move, turn} in gameMoves" :move="move">
+                <h3>Player: {{turn}}</h3>
+                <move-view :move="move"></move-view>
+            </div>
         </md-content>
     </div>
 </template>
 
 <script>
     import pesten from '@/js/Pesten';
-    import Card from "@/js/Card";
+    import MoveView from "@/components/MoveView";
+    import CardView from '@/components/CardView';
+
+    console.log(pesten);
 
     export default {
         name: 'home',
-        components: {},
+        components: {MoveView, CardView},
         data() {
             return {
-                gamePlay: ''
+                playerTurn: 0,
+                computerTurn: 1,
+                gamePlay: [],
+                possibleMoves: [],
+                pesten,
+                gameMoves: [],
             }
         },
         async mounted() {
-            this.computerPlay();
+            pesten.newGame();
+            let startTurn = 1;
+            pesten.state.turn = startTurn;
+
+            if (startTurn === this.computerTurn)
+                this.computerPlay();
+
+            this.possibleMoves = pesten.possibleMoves(pesten.state);
         },
         methods: {
+            playerMove(move) {
+                if (pesten.state.turn === this.playerTurn) {
+                    pesten.doMove(pesten.state, move);
+                    this.gameMoves.push({turn: this.playerTurn, move});
+
+                    if (pesten.state.turn === this.computerTurn)
+                        this.computerPlay();
+                    else
+                        this.possibleMoves = pesten.possibleMoves(pesten.state);
+                }
+            },
             computerPlay(log = true) {
 
-                pesten.newGame();
-                let moveStrings = [];
-                while (pesten.gameWinner(pesten.state) === false)
-                    moveStrings.push(pesten.randomMove(pesten.state, log));
+                let moves = [];
+                while (pesten.gameWinner(pesten.state) === false && pesten.state.turn === this.computerTurn)
+                    moves.push(pesten.randomMove(pesten.state, log));
 
-                moveStrings.push(["THE WINNER IS.............", pesten.gameWinner(pesten.state), "!!!!!!"]);
+                moves.forEach(move => this.gameMoves.push({turn: this.computerTurn, move}));
 
-                this.gamePlay = moveStrings.map(a => a.map(p => p instanceof Card ? JSON.stringify(p) : p).join(' '));
+                console.log("computer", moves);
+                return moves;
+            },
+            checkWin() {
+                let winner = pesten.gameWinner(pesten.state);
+                if (winner !== false)
+                    alert("Player " + winner + " is winner!");
             }
         }
     }
 </script>
 
 <style scoped>
-    .content {
-        max-width:500px;
-        width:100%;
-        margin:0 auto;
-        margin-top:50px;
+    .home {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .md-content {
         padding: 25px;
     }
 </style>

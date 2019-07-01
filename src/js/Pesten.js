@@ -44,15 +44,10 @@ class Pesten {
     randomMove(state) {
         let moves = this.possibleMoves(state);
         let move = moves[Math.floor(Math.random() * moves.length)];
-        let player = state.players[state.turn];
-
-        let moveString = ["Player " + state.turn + ':', player.deck.length.toString().padStart(2) + ' left -', move.type, ['take', 'bounce', 'color'].includes(move.type) ? move.value : '',
-            move.type === 'card' ? player.deck[move.value] : '',
-            move.type === 'bounce' ? player.deck[move.value.cardIndex] : ''];
 
         this.doMove(state, move);
 
-        return moveString
+        return move;
     }
 
     gameWinner(state) {
@@ -178,7 +173,7 @@ class Pesten {
             if (card.type === topCard.type || card.color === topCard.color || this.rules.allowedAnywhere.includes(card.type))
                 possible.push(card);
 
-        let moves = possible.map(p => new Move('card', playerCards.indexOf(p)));
+        let moves = possible.map(p => new Move('card', playerCards.indexOf(p), p));
 
         if (moves.length === 1 && possible[0].type === 'Joker')
             moves.push(new Move('take', 1));

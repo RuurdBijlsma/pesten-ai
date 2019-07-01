@@ -1,6 +1,6 @@
 {
-  "name": "vue-pesten",
-  "short_name": "vue-pesten",
+  "name": "pesten-ai",
+  "short_name": "pesten-ai",
   "icons": [
     {
       "src": "./img/icons/android-chrome-192x192.png",
