@@ -34,9 +34,10 @@
         </md-content>
 
         <md-content>
-            <h2>Moves log</h2>
+            <h2>Moves log </h2>
+            <p>Newest moves on top</p>
             <p>Computer is player {{computerTurn}}, human is player {{playerTurn}}</p>
-            <div v-for="{move, turn} in gameMoves" :move="move">
+            <div v-for="{move, turn} in gameMoves.slice().reverse()" :move="move">
                 <h3>Player: {{turn}}</h3>
                 <move-view :move="move"></move-view>
             </div>
