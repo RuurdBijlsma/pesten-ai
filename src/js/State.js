@@ -8,4 +8,8 @@ export default class State {
         this.turn = 0;
         this.direction = 1;
     }
+
+    get topCard(){
+        return this.activeDeck[this.activeDeck.length - 1];
+    }
 }

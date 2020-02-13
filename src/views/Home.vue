@@ -1,48 +1,30 @@
 <template>
     <div class="home">
-        <md-content class="content" :key="updateKey">
-            <h1>this.pesten!</h1>
-            <!--<p v-for="gameLine in gamePlay">{{gameLine}}</p>-->
+        <div class="my-cards card-collection">
+            <card-view
+                    class="card"
+                    v-for="card in pesten.state.players[playerTurn].deck"
+                    :key="card.id"
+                    :card="card"
+                    @click.native="playCard"
+            />
+        </div>
+        <div class="table-top">
             <div class="deck">
-                <h2>Deck</h2>
-                <p>Top card:</p>
-                <card-view :card="this.pesten.state.activeDeck[pesten.state.activeDeck.length - 1]"/>
-                <p>Opponent deck size: {{pesten.state.players[computerTurn].deck.length}}</p>
+                <card-view class="card backup" :hidden="true"/>
+                <card-view class="card top-card" :card="pesten.state.topCard"/>
             </div>
-            <div class="my-cards">
-                <h2>My Cards</h2>
-                <div v-for="card in this.pesten.state.players[playerTurn].deck" class="move">
-                    <card-view :card="card"/>
-                    <md-button
-                            v-if="possibleMoves
-                                .filter(m => !!m.card)
-                                .find(m => m.card.type === card.type && m.card.color === card.color)"
-                            @click="playerMove(possibleMoves
-                                .filter(m => !!m.card)
-                                .find(m => m.card.type === card.type && m.card.color === card.color))"
-                            class="md-dense md-primary">Do move
-                    </md-button>
-                </div>
-            </div>
-            <div class="possible-moves"
-                 v-if="this.pesten.state.turn === playerTurn && possibleMoves.filter(m => !m.card).length > 0">
-                <h2>Possible Moves</h2>
-                <div v-for="move in possibleMoves.filter(m => !m.card)" class="move">
-                    <move-view :move="move"/>
-                    <md-button @click="playerMove(move)" class="md-dense md-primary">Do move</md-button>
-                </div>
-            </div>
-        </md-content>
-
-        <md-content>
-            <h2>Moves log </h2>
-            <p>Newest moves on top</p>
-            <p>Computer is player {{computerTurn}}, human is player {{playerTurn}}</p>
-            <div v-for="{move, turn} in gameMoves.slice().reverse()" :move="move">
-                <h3>Player: {{turn}}</h3>
-                <move-view :move="move"/>
-            </div>
-        </md-content>
+        </div>
+        <div class="opponent-cards card-collection">
+            <card-view
+                    :hidden="true"
+                    class="card"
+                    v-for="card in pesten.state.players[computerTurn].deck"
+                    :key="card.id"
+                    :card="card"
+                    @click.native="playCard"
+            />
+        </div>
     </div>
 </template>
 
@@ -66,7 +48,7 @@
             }
         },
         async mounted() {
-            this.playAiGame();
+            // this.playAiGame();
             // return;
 
             console.log(this.pesten);
@@ -83,12 +65,15 @@
             this.forceUpdate();
         },
         methods: {
-            playAiGame(){
+            playCard(e) {
+                console.log(e.target)
+            },
+            playAiGame() {
 
                 let repeats = 100;
                 let smartWins = 0;
                 let dumbWins = 0;
-                for(let i = 0; i < repeats; i++){
+                for (let i = 0; i < repeats; i++) {
                     let pest = new Pesten();
                     while (true) {
                         if (pest.state.turn === 0)
@@ -98,7 +83,7 @@
 
                         let winner = pest.gameWinner(pest.state);
                         if (winner !== false) {
-                            if(winner === 0)
+                            if (winner === 0)
                                 smartWins++;
                             else dumbWins++;
                             console.log("Winner is ", winner === 0 ? 'smart' : 'dumb');
@@ -153,12 +138,53 @@
         justify-content: space-around;
     }
 
-    .move {
-        display: flex;
-        justify-content: left;
+    .card {
+        width: 100px;
+        height: 100%;
+        display: inline-block;
     }
 
-    .md-content {
-        padding: 25px;
+    .card-collection {
+        height: 200px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding: 10px 10px 10px 60px;
+    }
+
+    .card-collection .card {
+        margin-left: -50px;
+    }
+
+    .table-top {
+        position: fixed;
+        height: calc(100% - 400px);
+        width: 100%;
+        background-color: green;
+        top: 200px;
+        box-shadow: 5px 5px 5px 0px rgba(0, 0, 0, 0.3);
+    }
+
+    .deck {
+        display: flex;
+    }
+
+    .opponent-cards {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding-left: 90px;
+    }
+
+    .opponent-cards .card {
+        margin-left: -80px;
+        transform: rotate(6deg);
+    }
+
+    .my-cards {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
     }
 </style>
