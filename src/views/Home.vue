@@ -1,18 +1,18 @@
 <template>
     <div class="home">
         <md-content class="content" :key="updateKey">
-            <h1>Pesten!</h1>
+            <h1>this.pesten!</h1>
             <!--<p v-for="gameLine in gamePlay">{{gameLine}}</p>-->
             <div class="deck">
                 <h2>Deck</h2>
                 <p>Top card:</p>
-                <card-view :card="pesten.state.activeDeck[pesten.state.activeDeck.length - 1]"></card-view>
+                <card-view :card="this.pesten.state.activeDeck[pesten.state.activeDeck.length - 1]"/>
                 <p>Opponent deck size: {{pesten.state.players[computerTurn].deck.length}}</p>
             </div>
             <div class="my-cards">
                 <h2>My Cards</h2>
-                <div v-for="card in pesten.state.players[playerTurn].deck" class="move">
-                    <card-view :card="card"></card-view>
+                <div v-for="card in this.pesten.state.players[playerTurn].deck" class="move">
+                    <card-view :card="card"/>
                     <md-button
                             v-if="possibleMoves
                                 .filter(m => !!m.card)
@@ -24,10 +24,11 @@
                     </md-button>
                 </div>
             </div>
-            <div class="possible-moves" v-if="pesten.state.turn === playerTurn && possibleMoves.filter(m => !m.card).length > 0">
+            <div class="possible-moves"
+                 v-if="this.pesten.state.turn === playerTurn && possibleMoves.filter(m => !m.card).length > 0">
                 <h2>Possible Moves</h2>
                 <div v-for="move in possibleMoves.filter(m => !m.card)" class="move">
-                    <move-view :move="move"></move-view>
+                    <move-view :move="move"/>
                     <md-button @click="playerMove(move)" class="md-dense md-primary">Do move</md-button>
                 </div>
             </div>
@@ -39,18 +40,16 @@
             <p>Computer is player {{computerTurn}}, human is player {{playerTurn}}</p>
             <div v-for="{move, turn} in gameMoves.slice().reverse()" :move="move">
                 <h3>Player: {{turn}}</h3>
-                <move-view :move="move"></move-view>
+                <move-view :move="move"/>
             </div>
         </md-content>
     </div>
 </template>
 
 <script>
-    import pesten from '@/js/Pesten';
     import MoveView from "@/components/MoveView";
     import CardView from '@/components/CardView';
-
-    console.log(pesten);
+    import Pesten from "../js/Pesten";
 
     export default {
         name: 'home',
@@ -61,35 +60,64 @@
                 computerTurn: 1,
                 gamePlay: [],
                 possibleMoves: [],
-                pesten,
+                pesten: new Pesten(),
                 gameMoves: [],
                 updateKey: 0
             }
         },
         async mounted() {
-            pesten.newGame();
+            this.playAiGame();
+            // return;
+
+            console.log(this.pesten);
+            this.pesten.newGame();
             let startTurn = 1;
-            pesten.state.turn = startTurn;
+            this.pesten.state.turn = startTurn;
 
             if (startTurn === this.computerTurn)
                 this.computerPlay();
 
-            this.possibleMoves = pesten.possibleMoves(pesten.state);
+            this.possibleMoves = this.pesten.possibleMoves(this.pesten.state);
 
             this.checkWin();
             this.forceUpdate();
         },
         methods: {
+            playAiGame(){
+
+                let repeats = 100;
+                let smartWins = 0;
+                let dumbWins = 0;
+                for(let i = 0; i < repeats; i++){
+                    let pest = new Pesten();
+                    while (true) {
+                        if (pest.state.turn === 0)
+                            pest.bestMove(pest.state);
+                        else
+                            pest.randomMove(pest.state);
+
+                        let winner = pest.gameWinner(pest.state);
+                        if (winner !== false) {
+                            if(winner === 0)
+                                smartWins++;
+                            else dumbWins++;
+                            console.log("Winner is ", winner === 0 ? 'smart' : 'dumb');
+                            break;
+                        }
+                    }
+                }
+                console.log({smartWins, dumbWins})
+            },
             playerMove(move) {
-                if (pesten.state.turn === this.playerTurn) {
-                    pesten.doMove(pesten.state, move);
+                if (this.pesten.state.turn === this.playerTurn) {
+                    this.pesten.doMove(this.pesten.state, move);
                     this.gameMoves.push({turn: this.playerTurn, move});
 
-                    if (pesten.state.turn === this.computerTurn)
+                    if (this.pesten.state.turn === this.computerTurn)
                         this.computerPlay();
 
-                    if (pesten.state.turn === this.playerTurn)
-                        this.possibleMoves = pesten.possibleMoves(pesten.state);
+                    if (this.pesten.state.turn === this.playerTurn)
+                        this.possibleMoves = this.pesten.possibleMoves(this.pesten.state);
 
                     this.forceUpdate();
                     this.checkWin();
@@ -98,8 +126,8 @@
             computerPlay(log = true) {
 
                 let moves = [];
-                while (pesten.gameWinner(pesten.state) === false && pesten.state.turn === this.computerTurn)
-                    moves.push(pesten.randomMove(pesten.state, log));
+                while (this.pesten.gameWinner(this.pesten.state) === false && this.pesten.state.turn === this.computerTurn)
+                    moves.push(this.pesten.bestMove(this.pesten.state, log));
 
                 moves.forEach(move => this.gameMoves.push({turn: this.computerTurn, move}));
 
@@ -107,7 +135,7 @@
                 return moves;
             },
             checkWin() {
-                let winner = pesten.gameWinner(pesten.state);
+                let winner = this.pesten.gameWinner(this.pesten.state);
                 if (winner !== false)
                     alert("Player " + winner + " is winner!");
             },

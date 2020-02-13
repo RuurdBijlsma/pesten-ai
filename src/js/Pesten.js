@@ -2,8 +2,8 @@ import Card from "@/js/Card";
 import Move from "@/js/Move";
 import State from "@/js/State";
 
-class Pesten {
-    constructor() {
+export default class Pesten {
+    constructor(newGame = true) {
         this.rules = {
             allColors: ['hearts', 'spades', 'clubs', 'diamonds'],
             allowedAnywhere: ['J', 'Joker'],
@@ -20,10 +20,75 @@ class Pesten {
             playerCount: 2,
         };
 
-        this.newGame();
+        if (newGame)
+            this.newGame();
     }
 
-    newGame() {
+    copy(object) {
+        return JSON.parse(JSON.stringify(object));
+    }
+
+    customGame(state) {
+        let hand = this.copy(state.players[state.turn].deck);
+        let opponentsHandSizes = state.players
+            .filter((_, i) => i !== state.turn)
+            .map(player => player.deck.length);
+        let topCard = this.copy(state.activeDeck[state.activeDeck.length - 1]);
+
+        this.newGame(false);
+
+        this.state.players[0].deck = hand;
+        for (let card of hand)
+            this.state.backupDeck.splice(
+                this.state.backupDeck.findIndex(c => c.color === card.color && c.type === card.type)
+                , 1);
+        for (let i = 1; i < this.state.players.length; i++) {
+            let opponentHandSize = opponentsHandSizes[i - 1];
+            let opponent = this.state.players[i];
+            opponent.deck = this.state.backupDeck.splice(0, opponentHandSize);
+        }
+        this.state.backupDeck.splice(
+            this.state.backupDeck.findIndex(c => c.color === topCard.color && c.type === topCard.type)
+            , 1);
+        this.state.activeDeck.push(topCard);
+    }
+
+    evaluate(state) {
+        let moves = this.possibleMoves(state).map(move => {
+            return {move, wins: 0, losses: 0}
+        });
+
+        let pesten = new Pesten();
+        const gameRepeats = 100;
+
+        for (let moveStat of moves) {
+            for (let i = 0; i < gameRepeats; i++) {
+                pesten.customGame(state);
+                let move = this.copy(moveStat.move);
+                pesten.doMove(pesten.state, move);
+                let winner = pesten.playToWin(pesten.state);
+                if (winner === state.turn) moveStat.wins += 1;
+                else moveStat.losses += 1;
+            }
+            // console.log(moveStat);
+        }
+
+        let sortedMoves = moves.sort((a, b) => b.wins - a.wins);
+        // console.log(sortedMoves);
+        return sortedMoves[0].move;
+    }
+
+    playToWin(state) {
+        while (true) {
+            let winner = this.gameWinner(state);
+            if (winner !== false)
+                return winner;
+
+            this.randomMove(state);
+        }
+    }
+
+    newGame(giveCards = true) {
         this.maxPossibleTake = Math.max(...Object.values(this.rules.takeCards));
 
         this.state = new State(this.rules.playerCount);
@@ -35,10 +100,21 @@ class Pesten {
         }
 
         this.shuffle(this.state.backupDeck);
+        if (giveCards)
+            this.giveCards()
+    }
+
+    giveCards() {
         this.state.activeDeck.push(this.state.backupDeck.pop());
 
         for (let player of this.state.players)
             player.deck = this.state.backupDeck.splice(0, this.rules.playerStartCardAmount);
+    }
+
+    bestMove(state) {
+        let move = this.evaluate(state);
+        this.doMove(state, move);
+        return move;
     }
 
     randomMove(state) {
@@ -155,7 +231,7 @@ class Pesten {
 
         if (currentPlayer.takeCards > 0) {
             if (currentPlayer.deck.find(c => this.rules.bounceCards.includes(c.type)))
-            // Bounce card can be played on top of pest card
+                // Bounce card can be played on top of pest card
                 return currentPlayer.deck.filter(c => this.rules.bounceCards.includes(c.type)).map(c => new Move('bounce', {
                     cardIndex: currentPlayer.deck.indexOf(c),
                     take: currentPlayer.takeCards
@@ -220,5 +296,3 @@ class Pesten {
         return array;
     }
 }
-
-export default new Pesten();
